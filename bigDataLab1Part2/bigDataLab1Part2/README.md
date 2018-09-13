@@ -1,4 +1,1 @@
-# MatrixMultiply
-
-I have previously posted [this blog entry](https://lendap.wordpress.com/2015/02/16/matrix-multiplication-with-mapreduce/)
-about sparse matrix multiplication on hadoop. I wanted to put the code here in case anyone wants to try it.
+This is Part 2 of the lab where the word count mapreduce program is edited so that it now calulates averages for the words.
