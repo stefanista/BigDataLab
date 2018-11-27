@@ -1,0 +1,42 @@
+group: travis_lts
+
+cache:
+  directories:
+    - $HOME/.ivy2
+    - $HOME/.sbt/launchers/
+    - $HOME/.cache/spark-versions
+
+env:
+  global:
+    - SCALA_VERSION=2.11.8
+
+matrix:
+  include:
+    - jdk: oraclejdk8
+      env: PYSPARK_PYTHON=python2 SPARK_VERSION=2.2.2 SPARK_BUILD="spark-${SPARK_VERSION}-bin-hadoop2.7"
+    - jdk: oraclejdk8
+      env: PYSPARK_PYTHON=python2 SPARK_VERSION=2.3.1 SPARK_BUILD="spark-${SPARK_VERSION}-bin-hadoop2.7"
+    - jdk: oraclejdk8
+      env: PYSPARK_PYTHON=python3 SPARK_VERSION=2.2.2 SPARK_BUILD="spark-${SPARK_VERSION}-bin-hadoop2.7"
+    - jdk: oraclejdk8
+      env: PYSPARK_PYTHON=python3 SPARK_VERSION=2.3.1 SPARK_BUILD="spark-${SPARK_VERSION}-bin-hadoop2.7"
+
+before_install:
+ - ./bin/download_travis_dependencies.sh
+
+install:
+  - if [[ "${PYSPARK_PYTHON}" == "python2" ]]; then
+      pyenv install -f 2.7.13 && pyenv global 2.7.13;
+      python2 -m pip install --user -r ./python/requirements.txt;
+    else
+      pyenv install -f 3.5.4 && pyenv global 3.5.4;
+      python3 -m pip install --user -r ./python/requirements.txt;
+    fi
+
+script:
+  - ./build/sbt -Dspark.version=$SPARK_VERSION -Dscala.version=$SCALA_VERSION "set test in assembly := {}" assembly
+  - ./build/sbt -Dspark.version=$SPARK_VERSION -Dscala.version=$SCALA_VERSION coverage test coverageReport
+  - SPARK_HOME=$HOME/.cache/spark-versions/$SPARK_BUILD ./python/run-tests.sh
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
